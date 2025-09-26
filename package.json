@@ -1,0 +1,21 @@
+{
+  "name": "dlx-ai-search",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "groq-sdk": "^0.6.0",
+    "node-fetch": "^3.3.2",
+    "openai": "^4.61.0",
+    "sirv": "^2.0.4",
+    "@supabase/supabase-js": "^2.47.10"
+  }
+}
+
