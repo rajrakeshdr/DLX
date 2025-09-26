@@ -6,23 +6,125 @@
     <title>DLX AI Search</title>
     <style>
       :root { color-scheme: light dark; }
-      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, 'Helvetica Neue', Arial, 'Apple Color Emoji', 'Segoe UI Emoji'; margin: 0; padding: 0; }
-      .container { max-width: 880px; margin: 0 auto; padding: 24px; }
-      h1 { font-size: 24px; margin: 0 0 16px; }
-      form { display: flex; gap: 8px; margin-bottom: 16px; }
-      textarea { flex: 1; min-height: 120px; padding: 10px; resize: vertical; }
-      button { padding: 10px 16px; cursor: pointer; }
-      .row { display: flex; gap: 8px; align-items: center; margin: 8px 0; }
-      .answer { white-space: pre-wrap; border: 1px solid #8884; padding: 12px; border-radius: 8px; }
+      * { box-sizing: border-box; }
+      body {
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, 'Helvetica Neue', Arial;
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        background: radial-gradient(1200px 600px at 20% -10%, #646cff22, transparent 60%),
+                    radial-gradient(1200px 600px at 120% 10%, #22d3ee22, transparent 60%);
+      }
+      .container { max-width: 960px; margin: 0 auto; padding: 32px 20px 48px; }
+      .header { position: relative; display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+      .brand { display: flex; gap: 10px; align-items: center; }
+      .logo { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 10px; background: linear-gradient(135deg, #646cff, #22d3ee); color: white; font-weight: 700; }
+      h1 { font-size: 20px; margin: 0; letter-spacing: 0.2px; }
+      .subtitle { margin: 6px 0 20px; opacity: 0.8; }
+
+      /* Top-right logo button to open overlay */
+      .top-right { position: absolute; right: 0; top: 0; display: flex; align-items: center; gap: 10px; }
+      .menu-btn { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 12px; border: 1px solid #8883; background: color-mix(in hsl, Canvas 92%, transparent); cursor: pointer; }
+      .menu-btn:hover { box-shadow: 0 4px 16px -10px #0006; }
+
+      .card {
+        background: color-mix(in hsl, Canvas 85%, transparent);
+        -webkit-backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
+        border: 1px solid #8883;
+        border-radius: 14px;
+        padding: 18px;
+        box-shadow: 0 6px 30px -12px #0004;
+      }
+
+      .controls { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+      .controls label { display: flex; gap: 8px; align-items: center; font-size: 13px; }
+      select, input[type="range"] { accent-color: #646cff; }
+      select, button, textarea {
+        border-radius: 10px;
+        border: 1px solid #8883;
+        background: color-mix(in hsl, Canvas 92%, transparent);
+        color: inherit;
+      }
+      textarea { width: 100%; min-height: 140px; padding: 12px 14px; resize: vertical; font-size: 14px; line-height: 1.4; }
+
+      .actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px; }
+      button { padding: 10px 14px; cursor: pointer; border-radius: 10px; font-weight: 600; }
+      .btn-primary { background: linear-gradient(135deg, #646cff, #22d3ee); color: white; border: none; }
+      .btn-secondary { background: transparent; }
+      button:disabled { opacity: 0.7; cursor: not-allowed; }
+
+      .answer-wrap { margin-top: 18px; display: grid; gap: 10px; }
+      .answer-toolbar { display: flex; gap: 8px; justify-content: flex-end; }
+      .answer { white-space: pre-wrap; border: 1px solid #8883; padding: 14px; border-radius: 12px; min-height: 80px; background: color-mix(in hsl, Canvas 94%, transparent); }
+
       .small { font-size: 12px; opacity: 0.7; }
-      .controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-      input[type="range"] { width: 160px; }
-      select, input[type="text"] { padding: 6px 8px; }
+      footer { text-align: center; margin-top: 28px; opacity: 0.6; font-size: 12px; }
+
+      /* Hero section */
+      .hero { display: grid; gap: 14px; margin: 18px 0 0; }
+      .hero-title { font-size: 28px; font-weight: 700; letter-spacing: .2px; }
+      .hero-sub { opacity: .8; }
+
+      /* Suggestion chips */
+      .suggestions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+      .chip { padding: 8px 12px; border-radius: 999px; border: 1px solid #8883; background: color-mix(in hsl, Canvas 92%, transparent); cursor: pointer; font-size: 13px; }
+      .chip:hover { box-shadow: 0 6px 18px -12px #0006; }
+
+      /* AI typing dots inside textarea hint */
+      .typing-hint { display: inline-flex; gap: 3px; align-items: center; margin-left: 8px; vertical-align: middle; }
+      .dot { width: 6px; height: 6px; border-radius: 50%; background: #888; opacity: .7; animation: blink 1.2s infinite ease-in-out; }
+      .dot:nth-child(2) { animation-delay: .2s; }
+      .dot:nth-child(3) { animation-delay: .4s; }
+      @keyframes blink { 0%, 80%, 100% { opacity: .2; } 40% { opacity: 1; } }
+
+      /* Overlay menu */
+      .overlay-backdrop { position: fixed; inset: 0; backdrop-filter: blur(8px); background: #0006; display: none; }
+      .drawer { position: fixed; top: 0; right: 0; width: min(380px, 92vw); height: 100%; background: color-mix(in hsl, Canvas 90%, transparent); border-left: 1px solid #8883; transform: translateX(100%); transition: transform .28s ease; display: grid; grid-template-rows: auto 1fr auto; }
+      .drawer header { display: flex; align-items: center; justify-content: space-between; padding: 16px; border-bottom: 1px solid #8883; }
+      .drawer .brand { padding: 0 16px; }
+      .drawer .content { padding: 16px; display: grid; gap: 10px; }
+      .drawer .footer { padding: 16px; border-top: 1px solid #8883; display: grid; gap: 10px; }
+      .drawer.open { transform: translateX(0); }
+      .overlay-backdrop.show { display: block; }
+
+      .nav-link { padding: 10px 12px; border-radius: 10px; border: 1px solid #8883; background: color-mix(in hsl, Canvas 94%, transparent); }
+      .cta { display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 12px 14px; border-radius: 12px; font-weight: 700; border: none; background: linear-gradient(135deg, #22d3ee, #646cff); color: white; cursor: pointer; }
+      .social { display: grid; gap: 8px; }
+      .social button { display: grid; grid-template-columns: 20px 1fr; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; border: 1px solid #8883; background: color-mix(in hsl, Canvas 96%, transparent); cursor: pointer; }
+      .social button:hover { box-shadow: 0 8px 22px -14px #0008; }
+      .spinner { width: 14px; height: 14px; border: 2px solid #8886; border-top-color: transparent; border-radius: 50%; display: inline-block; animation: spin .9s linear infinite; }
+      @keyframes spin { to { transform: rotate(360deg); } }
+
+      /* Mobile */
+      @media (max-width: 640px) {
+        .hero-title { font-size: 22px; }
+        .actions { justify-content: stretch; }
+        .answer-toolbar { justify-content: stretch; }
+        .suggestions { overflow: auto; white-space: nowrap; }
+      }
     </style>
   </head>
   <body>
     <div class="container">
-      <h1>DLX AI Search</h1>
+      <div class="header">
+        <div class="brand">
+          <div class="logo">AI</div>
+          <div>
+            <h1>DLX AI Search</h1>
+            <div class="subtitle small">Ask anything. Powered by Groq · Model defaults to qwen/qwen3-32b</div>
+          </div>
+        </div>
+        <div class="top-right">
+          <button class="menu-btn" id="openMenu" aria-label="Open menu">Menu ▸</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="hero">
+          <div class="hero-title">Ask me anything about your security data… <span class="typing-hint" aria-hidden="true"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span></div>
+          <div class="hero-sub small">Use natural language to query alerts, endpoints, and identities.</div>
+        </div>
       <div class="controls">
         <label>Model
           <select id="model">
@@ -36,21 +138,79 @@
           <span id="tempVal" class="small">0.3</span>
         </label>
       </div>
-      <form id="searchForm">
-        <textarea id="query" placeholder="Ask anything..." required></textarea>
-        <button id="submit" type="submit">Search</button>
-      </form>
-      <div class="answer" id="answer"></div>
-      <p class="small">Results powered by Groq. No data is stored unless Supabase is configured on the server.</p>
+        <form id="searchForm">
+          <textarea id="query" placeholder="Ask me anything about your security data…" required></textarea>
+          <div class="actions">
+            <button class="btn-secondary" id="clear" type="button">Clear</button>
+            <button class="btn-primary" id="submit" type="submit">
+              <span id="btnLabel">Search</span>
+            </button>
+          </div>
+        </form>
+
+        <div class="suggestions" id="suggestions"></div>
+
+        <div class="answer-wrap">
+          <div class="answer-toolbar">
+            <button class="btn-secondary" id="copy" type="button">Copy answer</button>
+          </div>
+          <div class="answer" id="answer"></div>
+        </div>
+        <p class="small">Results powered by Groq. No data is stored unless Supabase is configured on the server.</p>
+      </div>
+
+      <!-- Overlay Menu -->
+      <div class="overlay-backdrop" id="backdrop"></div>
+      <aside class="drawer" id="drawer" aria-hidden="true">
+        <header>
+          <div class="brand">
+            <div class="logo">AI</div>
+            <div>
+              <strong>DLX</strong>
+              <div class="small">Secure Intelligence</div>
+            </div>
+          </div>
+          <button class="menu-btn" id="closeMenu" aria-label="Close menu">✕</button>
+        </header>
+        <div class="content">
+          <a class="nav-link" href="#">Home</a>
+          <a class="nav-link" href="#">About</a>
+          <a class="nav-link" href="#">Docs</a>
+        </div>
+        <div class="footer">
+          <button class="cta" id="loginCta">Login / Signup</button>
+          <div class="social">
+            <button id="loginGoogle"><span>🟢</span><span>Continue with Google</span></button>
+            <button id="loginMicrosoft"><span>🟦</span><span>Continue with Microsoft</span></button>
+            <button id="loginSSO"><span>🔒</span><span>Login with SSO</span></button>
+          </div>
+        </div>
+      </aside>
+
+      <footer>
+        © DLX · Built with love
+      </footer>
     </div>
     <script>
       const form = document.getElementById('searchForm');
       const queryEl = document.getElementById('query');
       const answerEl = document.getElementById('answer');
       const submitBtn = document.getElementById('submit');
+      const btnLabel = document.getElementById('btnLabel');
+      const copyBtn = document.getElementById('copy');
+      const clearBtn = document.getElementById('clear');
       const modelEl = document.getElementById('model');
       const tempEl = document.getElementById('temperature');
       const tempVal = document.getElementById('tempVal');
+      const openMenu = document.getElementById('openMenu');
+      const closeMenu = document.getElementById('closeMenu');
+      const drawer = document.getElementById('drawer');
+      const backdrop = document.getElementById('backdrop');
+      const loginCta = document.getElementById('loginCta');
+      const loginGoogle = document.getElementById('loginGoogle');
+      const loginMicrosoft = document.getElementById('loginMicrosoft');
+      const loginSSO = document.getElementById('loginSSO');
+      const suggestionsEl = document.getElementById('suggestions');
 
       tempEl.addEventListener('input', () => { tempVal.textContent = tempEl.value; });
 
@@ -59,7 +219,8 @@
         const query = queryEl.value.trim();
         if (!query) return;
         submitBtn.disabled = true;
-        answerEl.textContent = 'Thinking...';
+        btnLabel.textContent = 'Thinking…';
+        answerEl.textContent = '';
         try {
           const res = await fetch('/api/search', {
             method: 'POST',
@@ -73,8 +234,82 @@
           answerEl.textContent = 'Error: ' + (err?.message || err);
         } finally {
           submitBtn.disabled = false;
+          btnLabel.textContent = 'Search';
         }
       });
+
+      copyBtn.addEventListener('click', async () => {
+        const text = answerEl.textContent.trim();
+        if (!text) return;
+        try {
+          await navigator.clipboard.writeText(text);
+          copyBtn.textContent = 'Copied!';
+          setTimeout(() => (copyBtn.textContent = 'Copy answer'), 1200);
+        } catch (_) {}
+      });
+
+      clearBtn.addEventListener('click', () => {
+        queryEl.value = '';
+        answerEl.textContent = '';
+        queryEl.focus();
+      });
+
+      // Overlay interactions
+      function openDrawer() {
+        drawer.classList.add('open');
+        backdrop.classList.add('show');
+        drawer.setAttribute('aria-hidden', 'false');
+      }
+      function closeDrawer() {
+        drawer.classList.remove('open');
+        backdrop.classList.remove('show');
+        drawer.setAttribute('aria-hidden', 'true');
+      }
+      openMenu.addEventListener('click', openDrawer);
+      closeMenu.addEventListener('click', closeDrawer);
+      backdrop.addEventListener('click', closeDrawer);
+      window.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDrawer(); });
+
+      // Login buttons with spinners (mock)
+      function withSpinner(btn, fn) {
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span><span style="margin-left:8px">Redirecting…</span>';
+        Promise.resolve(fn()).finally(() => {
+          setTimeout(() => {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+          }, 1000);
+        });
+      }
+      loginCta.addEventListener('click', () => openDrawer());
+      loginGoogle.addEventListener('click', () => withSpinner(loginGoogle, () => {/* trigger OAuth here */}));
+      loginMicrosoft.addEventListener('click', () => withSpinner(loginMicrosoft, () => {/* trigger OAuth here */}));
+      loginSSO.addEventListener('click', () => withSpinner(loginSSO, () => {/* trigger SSO here */}));
+
+      // Suggestions
+      const defaultSuggestions = [
+        'Show me all critical alerts in the past 24 hours',
+        'Which endpoints are vulnerable to ransomware?',
+        'List recent logins from unusual locations',
+        'Summarize high-severity incidents this week',
+        'What are the top failed login sources today?'
+      ];
+      function renderSuggestions(items) {
+        suggestionsEl.innerHTML = '';
+        items.forEach((text) => {
+          const chip = document.createElement('button');
+          chip.type = 'button';
+          chip.className = 'chip';
+          chip.textContent = text;
+          chip.addEventListener('click', () => {
+            queryEl.value = text;
+            form.requestSubmit();
+          });
+          suggestionsEl.appendChild(chip);
+        });
+      }
+      renderSuggestions(defaultSuggestions);
     </script>
   </body>
   </html>
