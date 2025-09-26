@@ -33,7 +33,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.post('/api/search', async (req, res) => {
   try {
-    const { query, system = 'You are a helpful AI assistant.', model = 'llama-3.1-70b-versatile', temperature = 0.3 } = req.body || {};
+    const { query, system = 'You are a helpful AI assistant.', model = 'qwen/qwen3-32b', temperature = 0.3 } = req.body || {};
 
     if (!query || typeof query !== 'string') {
       return res.status(400).json({ error: 'Missing query' });
